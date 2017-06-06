@@ -560,7 +560,13 @@ func (d *VolumeDriver) Create(r volume.Request) volume.Response {
 func (d *VolumeDriver) Remove(r volume.Request) volume.Response {
 	log.WithFields(log.Fields{"name": r.Name}).Info("Removing volume ")
 
-	// Docker is supposed to block 'remove' command if the volume is used. Verify.
+	if d.refCounts.GetInitSuccess() != true {
+		msg := fmt.Sprintf(plugin_utils.ErrorPluginInit+" Cannot remove volume=%s", r.Name)
+		log.Error(msg)
+		return volume.Response{Err: msg}
+	}
+
+	// Docker is supposed to block 'remove' command if the volume is used.
 	if d.getRefCount(r.Name) != 0 {
 		msg := fmt.Sprintf("Remove failure - volume is still mounted. "+
 			" volume=%s, refcount=%d", r.Name, d.getRefCount(r.Name))
