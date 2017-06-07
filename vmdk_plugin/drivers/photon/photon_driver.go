@@ -114,7 +114,7 @@ func NewVolumeDriver(targetURL string, projectID string, hostID string, mountDir
 
 // Return the number of references for the given volume
 func (d *VolumeDriver) getRefCount(vol string) uint {
-	if d.refCounts.GetInitSuccess() != true {
+	if d.refCounts.IsInitialized() != true {
 		return 1
 	}
 	return d.refCounts.GetCount(vol)
@@ -122,7 +122,7 @@ func (d *VolumeDriver) getRefCount(vol string) uint {
 
 // Increment the reference count for the given volume
 func (d *VolumeDriver) incrRefCount(vol string) uint {
-	if d.refCounts.GetInitSuccess() != true {
+	if d.refCounts.IsInitialized() != true {
 		return 1
 	}
 	return d.refCounts.Incr(vol)
@@ -130,7 +130,7 @@ func (d *VolumeDriver) incrRefCount(vol string) uint {
 
 // Decrement the reference count for the given volume
 func (d *VolumeDriver) decrRefCount(vol string) (uint, error) {
-	if d.refCounts.GetInitSuccess() != true {
+	if d.refCounts.IsInitialized() != true {
 		return 1, nil
 	}
 	return d.refCounts.Decr(vol)
@@ -560,8 +560,10 @@ func (d *VolumeDriver) Create(r volume.Request) volume.Response {
 func (d *VolumeDriver) Remove(r volume.Request) volume.Response {
 	log.WithFields(log.Fields{"name": r.Name}).Info("Removing volume ")
 
-	if d.refCounts.GetInitSuccess() != true {
-		msg := fmt.Sprintf(plugin_utils.ErrorPluginInit+" Cannot remove volume=%s", r.Name)
+	// Cannot remove volumes till plugin completely initializes (refcounting is complete)
+	// because we don't know if it is being used or not
+	if d.refCounts.IsInitialized() != true {
+		msg := fmt.Sprintf(plugin_utils.PluginInitError+" Cannot remove volume=%s", r.Name)
 		log.Error(msg)
 		return volume.Response{Err: msg}
 	}
@@ -639,7 +641,7 @@ func (d *VolumeDriver) Unmount(r volume.UnmountRequest) volume.Response {
 	d.refCounts.StateMtx.Lock()
 	defer d.refCounts.StateMtx.Unlock()
 
-	if d.refCounts.GetInitSuccess() != true {
+	if d.refCounts.IsInitialized() != true {
 		// if refcounting hasn't been succesful,
 		// no refcounting, no unmount. All unmounts are delayed
 		// until we succesfully populate the refcount map

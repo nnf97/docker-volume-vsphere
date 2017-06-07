@@ -33,8 +33,8 @@ const (
 	// "datastore" key is defined in vmdkops service
 	datastoreKey = "datastore"
 
-	// ErrorPluginInit message to indicate that plugin initialization(refcounting) is not yet complete
-	ErrorPluginInit = "Plugin initialization in progress."
+	// PluginInitError message to indicate that plugin initialization(refcounting) is not yet complete
+	PluginInitError = "Plugin initialization in progress."
 )
 
 // VolumeInfo - Volume fullname, datastore and metadata
