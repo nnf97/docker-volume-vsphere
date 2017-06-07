@@ -23,16 +23,15 @@ import (
 	"os"
 	"strconv"
 	"time"
-
 	"github.com/vmware/docker-volume-vsphere/tests/utils/govc"
 )
 
 // TestConfig - struct for common test configuration params
 type TestConfig struct {
-	EsxHost         string
-	DockerHosts     []string
+	EsxHost string
+	DockerHosts []string
 	DockerHostNames []string
-	Datastores      []string
+	Datastores []string
 }
 
 var (
@@ -53,7 +52,6 @@ func init() {
 func GetVolumeName() string {
 	return volumeName
 }
-
 // GetVolumeNameWithTimeStamp prepares unique volume name by appending current time-stamp value
 func GetVolumeNameWithTimeStamp(volName string) string {
 	return volName + "_volume_" + strconv.FormatInt(time.Now().Unix(), 10)
