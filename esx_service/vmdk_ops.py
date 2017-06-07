@@ -1232,8 +1232,6 @@ def disk_attach(vmdk_path, vm):
     kv_status_attached, kv_uuid, attach_mode, _ = getStatusAttached(vmdk_path)
     logging.info("Attaching {0} as {1}".format(vmdk_path, attach_mode))
 
-    # If the volume is attached then check if the attach is stale (VM is powered off).
-    # Otherwise, detach the disk from the VM it's attached to.
     if kv_status_attached:
        log_attached_volume(vmdk_path, kv_uuid)
 
