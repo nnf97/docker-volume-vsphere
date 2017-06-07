@@ -23,15 +23,16 @@ import (
 	"os"
 	"strconv"
 	"time"
+
 	"github.com/vmware/docker-volume-vsphere/tests/utils/govc"
 )
 
 // TestConfig - struct for common test configuration params
 type TestConfig struct {
-	EsxHost string
-	DockerHosts []string
+	EsxHost         string
+	DockerHosts     []string
 	DockerHostNames []string
-	Datastores []string
+	Datastores      []string
 }
 
 var (
@@ -52,6 +53,7 @@ func init() {
 func GetVolumeName() string {
 	return volumeName
 }
+
 // GetVolumeNameWithTimeStamp prepares unique volume name by appending current time-stamp value
 func GetVolumeNameWithTimeStamp(volName string) string {
 	return volName + "_volume_" + strconv.FormatInt(time.Now().Unix(), 10)
@@ -131,8 +133,10 @@ func GetTestConfig() *TestConfig {
 	config.EsxHost = os.Getenv("ESX")
 	config.DockerHosts = append(config.DockerHosts, os.Getenv("VM1"))
 	config.DockerHosts = append(config.DockerHosts, os.Getenv("VM2"))
-	config.DockerHostNames = append(config.DockerHostNames, govc.RetrieveVMNameFromIP(config.DockerHosts[0]))
-	config.DockerHostNames = append(config.DockerHostNames, govc.RetrieveVMNameFromIP(config.DockerHosts[1]))
+	//config.DockerHostNames = append(config.DockerHostNames, govc.RetrieveVMNameFromIP(config.DockerHosts[0]))
+	//config.DockerHostNames = append(config.DockerHostNames, govc.RetrieveVMNameFromIP(config.DockerHosts[1]))
+	config.DockerHostNames = append(config.DockerHostNames, "master-VM0.0")
+	config.DockerHostNames = append(config.DockerHostNames, "worker1-VM1.0")
 	config.Datastores = govc.GetDatastoreList()
 
 	if config.DockerHostNames[0] == "" || config.DockerHostNames[1] == "" ||
