@@ -23,61 +23,90 @@ Anything we need to persist between the reboots, needs to be confugured here.
 import fileinput
 import sys
 
-END_OF_CONTENT = "exit 0" # we will reach it one time, the first time only
+# We expect this record at the end of the local.sh.
+# We need to insert the content before it.
+END_OF_CONTENT = "exit 0"
 
-# this is what we use to identify the text section
-config_db_tag = "# -- vSphere Docker Volume Service configuration location"
+# This is what we use to identify the our content for DB links..
+CONFIG_DB_TAG = "# -- vSphere Docker Volume Service configuration location"
 
-# this is the text section tempate. '{}' will be replace by datastore name
-config_db_section = config_db_tag + \
+# This is the content tempate for db links. '{}' will be replaced by datastore name
+CONFIG_DB_INFO = CONFIG_DB_TAG + \
 """
 #
-# Please do not edit this section manually. It is managed by vmdkops_admin.py config command
+# Please do not edit this section manually. It is managed by vmdkops_admin.py config command.
+# Relies on local.sh having "exit 0" at the end.
 #
+
 datastore={}
 slink=/etc/vmware/vmdkops/auth-db
+
 shared_dbn=/vmfs/volumes/$datastore/dockvols/vmdkops_config.db
 if [ -d $(basename $slink) ] && [ ! -e $slink  ]
 then
     ln -s $shared_db $slink
 fi
-""" + config_db_tag + "\n"
+
+""" + CONFIG_DB_TAG + "\n"
 
 
 # open file and scan it.
 #
 # if we reached "exit 0" add the text section, add the rest of the file and be done
-# if we find the tag,  skip to the end of the section (same tag, add the rest of the file and be done)
+# if we find the tag,  skip to the end of the section
 
-
-def update_content(src_file, add, section, tag):
+def update_content(content, tag, add=True, file="/etc/rc.local.d/local.sh"):
     """
-    Updates (adds or removes) a section limited with tag to a file
+    A generic function to update (add or removes) <content> limited with <tag>s, in a <file>
     TBD: a better description
     """
     skip_to_tag = no_more_checks = False
-    for line in iter(fileinput.input([src_file])):
+    for line in iter(fileinput.input([file])):
         if no_more_checks:
             sys.stdout.write(line)
             continue
         if skip_to_tag:
             if line.startswith(tag):
-                # found the second tag, done with the section
+                # found the second tag, complete operation.
                 no_more_checks = True
-                if add:
-                    print(section)
             continue
         if line.startswith(tag):
-            # Found the first tag - skip till the next one
+            # First tag - add the content (if needed) and skip till the next tag
+            if add:
+                print(content)
             skip_to_tag = True
             continue
         if line.startswith(END_OF_CONTENT):
             if add:
-                print(section)
+                print(content)
             no_more_checks = True
         sys.stdout.write(line)
+    if not no_more_checks:
+        # for some reason we did not find 'exit 0' nor tag, so let's dump the
+        # content just in case.
+        if add:
+            print(content)
 
-name = "test1"
-ds_name = "MYSharedXXXXXXXXE"
+def update_symlink_info(ds_name, add=True):
+    """Convenience wrapper for updating symlink info only"""
+    update_content(CONFIG_DB_INFO.format(ds_name), CONFIG_DB_TAG, add=add)
 
-update_content(src_file=name, add=False, section=config_db_section.format(ds_name), tag=config_db_tag)
+
+# ==== Run it now ====
+
+if __name__ == "__main__":
+    # test:
+    # take a file. Add something, Check (regexp) it's there. Change something and redo it again, ,Check the text is there.
+    # then remove and compare with original file. Use mktmp() for file name.
+    file = '/home/msterin/workspace.local/go_path/src/github.com/vmware/' + \
+           'docker-volume-vsphere/esx_service/cli/test1'
+    update_content(content=CONFIG_DB_INFO.format("MyDSSSSSSSSNAE"), tag=CONFIG_DB_TAG, file=file, add=True)
+
+# TODO: save to backup  (see below), cp to tmp, and from tmp go to the file directly.
+# backups: keep one backup per hour, unlimited number in local.sh.backup.day.hour. We need then since the local.sh
+# is backed up by ESX and is a part of state.tgz - so it would be hard to recover if it has lots of stuff. Worth a few hours of work
+#
+# If 'day' already exists, do not touch it
+# add local_sh.update_content
+
+# TODO: test IN UNIT TESTS only
