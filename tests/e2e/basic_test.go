@@ -29,11 +29,6 @@ import (
 	"github.com/vmware/docker-volume-vsphere/tests/utils/verification"
 )
 
-const (
-	testName = "basic_test"
-	vmgroup  = "T1"
-)
-
 type BasicTestSuite struct {
 	config        *inputparams.TestConfig
 	esx           string
@@ -57,9 +52,9 @@ func (s *BasicTestSuite) SetUpSuite(c *C) {
 	s.vm2 = s.config.DockerHosts[1]
 	s.vm1Name = s.config.DockerHostNames[0]
 	s.vm2Name = s.config.DockerHostNames[1]
-	s.volName1 = inputparams.GetUniqueVolumeName(testName)
-	s.volName2 = inputparams.GetUniqueVolumeName(testName)
-	s.containerName = inputparams.GetContainerNameWithTimeStamp(testName)
+	s.volName1 = inputparams.GetUniqueVolumeName(c.TestName())
+	s.volName2 = inputparams.GetUniqueVolumeName(c.TestName())
+	s.containerName = inputparams.GetContainerNameWithTimeStamp(c.TestName())
 }
 
 var _ = Suite(&BasicTestSuite{})
@@ -79,7 +74,7 @@ var _ = Suite(&BasicTestSuite{})
 // 7. Remove the volume
 // 8. Verify the volume is unavailable
 func (s *BasicTestSuite) TestVolumeLifecycle(c *C) {
-	misc.LogTestStart(testName, "TestVolumeLifecycle")
+	misc.LogTestStart(c.TestName(), "TestVolumeLifecycle")
 
 	for _, host := range s.config.DockerHosts {
 		out, err := dockercli.CreateVolume(host, s.volName1)
@@ -107,7 +102,7 @@ func (s *BasicTestSuite) TestVolumeLifecycle(c *C) {
 		c.Assert(accessible, Equals, false, Commentf("Volume %s is still available", s.volName1))
 	}
 
-	misc.LogTestEnd(testName, "TestVolumeLifecycle")
+	misc.LogTestEnd(c.TestName(), "TestVolumeLifecycle")
 }
 
 // Test volume isolation between VMs backed by different datastores:
@@ -122,7 +117,7 @@ func (s *BasicTestSuite) TestVolumeLifecycle(c *C) {
 // 3. Verify the volume is unavailable from VM2
 // 4. Remove the volume
 func (s *BasicTestSuite) TestBasicVolumeIsolation(c *C) {
-	misc.LogTestStart(testName, "TestBasicVolumeIsolation")
+	misc.LogTestStart(c.TestName(), "TestBasicVolumeIsolation")
 
 	out, err := dockercli.CreateVolume(s.vm1, s.volName1)
 	c.Assert(err, IsNil, Commentf(out))
@@ -137,7 +132,7 @@ func (s *BasicTestSuite) TestBasicVolumeIsolation(c *C) {
 	out, err = dockercli.DeleteVolume(s.vm1, s.volName1)
 	c.Assert(err, IsNil, Commentf(out))
 
-	misc.LogTestEnd(testName, "TestBasicVolumeIsolation")
+	misc.LogTestEnd(c.TestName(), "TestBasicVolumeIsolation")
 }
 
 // Test volume isolation between _DEFAULT and user defined vmgroups:
@@ -155,7 +150,7 @@ func (s *BasicTestSuite) TestBasicVolumeIsolation(c *C) {
 // 8. Remove the volumes
 // 9. Remove Config DB
 func (s *BasicTestSuite) TestVmGroupVolumeIsolation(c *C) {
-	misc.LogTestStart(testName, "TestVmGroupVolumeIsolation")
+	misc.LogTestStart(c.TestName(), "TestVmGroupVolumeIsolation")
 
 	// Initialize Config DB
 	admincli.ConfigInit(s.esx)
@@ -169,6 +164,7 @@ func (s *BasicTestSuite) TestVmGroupVolumeIsolation(c *C) {
 	accessible = verification.CheckVolumeAvailability(s.vm2, s.volName1)
 	c.Assert(accessible, Equals, true, Commentf("Volume %s is not available on [%s]", s.volName1, s.vm2))
 
+	const vmgroup = "T1"
 	out, err = admincli.CreateVMgroup(s.esx, vmgroup, s.vm1Name)
 	c.Assert(err, IsNil, Commentf(out))
 
@@ -197,5 +193,5 @@ func (s *BasicTestSuite) TestVmGroupVolumeIsolation(c *C) {
 	// Remove Config DB
 	admincli.ConfigRemove(s.esx)
 
-	misc.LogTestEnd(testName, "TestVmGroupVolumeIsolation")
+	misc.LogTestEnd(c.TestName(), "TestVmGroupVolumeIsolation")
 }
