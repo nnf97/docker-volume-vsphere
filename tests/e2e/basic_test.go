@@ -52,6 +52,9 @@ func (s *BasicTestSuite) SetUpSuite(c *C) {
 	s.vm2 = s.config.DockerHosts[1]
 	s.vm1Name = s.config.DockerHostNames[0]
 	s.vm2Name = s.config.DockerHostNames[1]
+}
+
+func (s *BasicTestSuite) SetUpTest(c *C) {
 	s.volName1 = inputparams.GetUniqueVolumeName(c.TestName())
 	s.volName2 = inputparams.GetUniqueVolumeName(c.TestName())
 	s.containerName = inputparams.GetContainerNameWithTimeStamp(c.TestName())
@@ -74,7 +77,7 @@ var _ = Suite(&BasicTestSuite{})
 // 7. Remove the volume
 // 8. Verify the volume is unavailable
 func (s *BasicTestSuite) TestVolumeLifecycle(c *C) {
-	misc.LogTestStart(c.TestName(), "TestVolumeLifecycle")
+	misc.LogTestStart(c.TestName())
 
 	for _, host := range s.config.DockerHosts {
 		out, err := dockercli.CreateVolume(host, s.volName1)
@@ -102,7 +105,7 @@ func (s *BasicTestSuite) TestVolumeLifecycle(c *C) {
 		c.Assert(accessible, Equals, false, Commentf("Volume %s is still available", s.volName1))
 	}
 
-	misc.LogTestEnd(c.TestName(), "TestVolumeLifecycle")
+	misc.LogTestEnd(c.TestName())
 }
 
 // Test volume isolation between VMs backed by different datastores:
@@ -117,7 +120,7 @@ func (s *BasicTestSuite) TestVolumeLifecycle(c *C) {
 // 3. Verify the volume is unavailable from VM2
 // 4. Remove the volume
 func (s *BasicTestSuite) TestBasicVolumeIsolation(c *C) {
-	misc.LogTestStart(c.TestName(), "TestBasicVolumeIsolation")
+	misc.LogTestStart(c.TestName())
 
 	out, err := dockercli.CreateVolume(s.vm1, s.volName1)
 	c.Assert(err, IsNil, Commentf(out))
@@ -132,7 +135,7 @@ func (s *BasicTestSuite) TestBasicVolumeIsolation(c *C) {
 	out, err = dockercli.DeleteVolume(s.vm1, s.volName1)
 	c.Assert(err, IsNil, Commentf(out))
 
-	misc.LogTestEnd(c.TestName(), "TestBasicVolumeIsolation")
+	misc.LogTestEnd(c.TestName())
 }
 
 // Test volume isolation between _DEFAULT and user defined vmgroups:
@@ -150,7 +153,7 @@ func (s *BasicTestSuite) TestBasicVolumeIsolation(c *C) {
 // 8. Remove the volumes
 // 9. Remove Config DB
 func (s *BasicTestSuite) TestVmGroupVolumeIsolation(c *C) {
-	misc.LogTestStart(c.TestName(), "TestVmGroupVolumeIsolation")
+	misc.LogTestStart(c.TestName())
 
 	// Initialize Config DB
 	admincli.ConfigInit(s.esx)
@@ -193,5 +196,5 @@ func (s *BasicTestSuite) TestVmGroupVolumeIsolation(c *C) {
 	// Remove Config DB
 	admincli.ConfigRemove(s.esx)
 
-	misc.LogTestEnd(c.TestName(), "TestVmGroupVolumeIsolation")
+	misc.LogTestEnd(c.TestName())
 }

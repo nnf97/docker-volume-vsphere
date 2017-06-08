@@ -36,7 +36,6 @@ import (
 )
 
 const (
-	vsanVolumeTest = "vsan_vol"
 	vsanPolicyFlag = "vsan-policy-name"
 )
 
@@ -74,7 +73,7 @@ var _ = Suite(&VsanTestSuite{})
 // 5. Volume creation with non existing policy should fail
 // 6. Volume creation with invalid policy should fail
 func (s *VsanTestSuite) TestVSANPolicy(c *C) {
-	misc.LogTestStart(volCreateTest, "TestVSANPolicy")
+	misc.LogTestStart(c.TestName())
 
 	policyName := "validPolicy"
 	out, err := admincli.CreatePolicy(s.config.EsxHost, policyName, "'((\"proportionalCapacity\" i50)''(\"hostFailuresToTolerate\" i0))'")
@@ -99,5 +98,5 @@ func (s *VsanTestSuite) TestVSANPolicy(c *C) {
 		c.Assert(strings.HasPrefix(out, ErrorVolumeCreate), Equals, true)
 	}
 
-	misc.LogTestStart(volCreateTest, "TestVSANPolicy")
+	misc.LogTestStart(c.TestName())
 }
