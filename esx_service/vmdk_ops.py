@@ -1146,7 +1146,7 @@ def log_attached_volume(vmdk_path, kv_uuid):
        cur_vm = findVmByUuid(kv_uuid)
 
        if cur_vm:
-          msg = "Disk {0} already attached to VM {1}".format(vmdk_path,
+          msg = "Disk is {0} already attached to VM {1}".format(vmdk_path,
                                                              cur_vm.config.name)
        else:
           msg = "Failed to find VM (id {0}), disk {1} is already attached".format(kv_uuid,
