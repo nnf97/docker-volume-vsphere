@@ -93,10 +93,12 @@ def update_symlink_info(ds_name, add=True):
     update_content(CONFIG_DB_INFO.format(ds_name), CONFIG_DB_TAG, add=add)
 
 
-# ==== Run it now ====
+# ==== test====
 
 import shutil
 
+# Basic test: add new content. Replace it. Remove it. Compare with original content - should be the same.
+# Also, on neach step check some pattern in the current file
 def unit_test_it():
     'Basic unit test, TBD: do files in mktmp()' # TODO mkdtemp
 
@@ -110,28 +112,20 @@ Some more code() !
 exit 0
 
 """
-    # Basic test: add new content. Replace it. Remove it. Compare with original content - should be the same.
-    # Also, on neach step check some pattern in the current file
-    with open("test.tmpl", "w") as f:
+
+    name = "./test" # TMP mktmp
+    with open(name, "w") as f:
         f.write(test_content)
-    shutil.copy("./test.tmpl", "./test")
-    ds = "ShouldBeTest1"
-    update_content(content=CONFIG_DB_INFO.format(ds), tag=CONFIG_DB_TAG, file="./test", add=True)
-    with open("./test") as f:
-        if f.read().find(ds) == -1:
-            print("failed with test")
-    shutil.copy("./test", "./test1")
-    ds = "Test2"
-    update_content(content=CONFIG_DB_INFO.format(ds), tag=CONFIG_DB_TAG, file="./test1", add=True)
-    with open("./test1") as f:
-        if f.read().find(ds) == -1:
-            print("failed with test1")
-    shutil.copy("./test1", "./test2")
-    update_content(content=None, tag=CONFIG_DB_TAG, file="./test2", add=False)
-    with open("./test2") as f:
-        c = f.read()
-    if c != test_content:
-        print("test.impl and test 2 are Different !")
+    for ds_name in ["DSTest1","DSTest2", "DSTest3"]:
+        update_content(content=CONFIG_DB_INFO.format(ds_name), tag=CONFIG_DB_TAG, file="./test", add=True)
+        with open(name) as f:
+            if f.read().find(ds_name) == -1:
+                print("failed with {}".format(ds_name))
+    update_content(content=None, tag=CONFIG_DB_TAG, file=name, add=False)
+    with open(name) as f:
+        final_content = f.read()
+    if final_content != test_content:
+        print("Start and beginning are Different ! (\n{}\n{}\n".format(final_content, test_content))
     else:
         print("all good")
 
