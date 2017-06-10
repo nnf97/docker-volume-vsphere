@@ -28,20 +28,21 @@ import sys
 END_OF_CONTENT = "exit 0"
 
 # This is what we use to identify the our content for DB links..
-CONFIG_DB_TAG = "# -- vSphere Docker Volume Service configuration location"
+CONFIG_DB_TAG = "# -- vSphere Docker Volume Service configuration --"
 
 # This is the content tempate for db links. '{}' will be replaced by datastore name
 CONFIG_DB_INFO = CONFIG_DB_TAG + \
 """
 #
 # Please do not edit this section manually. It is managed by vmdkops_admin.py config command.
-# Relies on local.sh having "exit 0" at the end.
+# Note: the code relies on local.sh having "exit 0" at the end.
 #
 
 datastore={}
-slink=/etc/vmware/vmdkops/auth-db
 
+slink=/etc/vmware/vmdkops/auth-db
 shared_dbn=/vmfs/volumes/$datastore/dockvols/vmdkops_config.db
+
 if [ -d $(basename $slink) ] && [ ! -e $slink  ]
 then
     ln -s $shared_db $slink
@@ -54,14 +55,13 @@ fi
 #
 # if we reached "exit 0" add the text section, add the rest of the file and be done
 # if we find the tag,  skip to the end of the section
-
+#
 def update_content(content, tag, add=True, file="/etc/rc.local.d/local.sh"):
     """
     A generic function to update (add or removes) <content> limited with <tag>s, in a <file>
-    TBD: a better description
     """
     skip_to_tag = no_more_checks = False
-    for line in iter(fileinput.input([file])):
+    for line in iter(fileinput.input([file], inplace=True, backup=".bck")):
         if no_more_checks:
             sys.stdout.write(line)
             continue
@@ -73,19 +73,20 @@ def update_content(content, tag, add=True, file="/etc/rc.local.d/local.sh"):
         if line.startswith(tag):
             # First tag - add the content (if needed) and skip till the next tag
             if add:
-                print(content)
+                sys.stdout.write(content)
             skip_to_tag = True
             continue
         if line.startswith(END_OF_CONTENT):
             if add:
-                print(content)
+                sys.stdout.write(content)
             no_more_checks = True
         sys.stdout.write(line)
     if not no_more_checks:
         # for some reason we did not find 'exit 0' nor tag, so let's dump the
         # content just in case.
         if add:
-            print(content)
+            sys.stdout.write(content)
+
 
 def update_symlink_info(ds_name, add=True):
     """Convenience wrapper for updating symlink info only"""
@@ -94,13 +95,44 @@ def update_symlink_info(ds_name, add=True):
 
 # ==== Run it now ====
 
+import shutil
+
 if __name__ == "__main__":
-    # test:
-    # take a file. Add something, Check (regexp) it's there. Change something and redo it again, ,Check the text is there.
-    # then remove and compare with original file. Use mktmp() for file name.
-    file = '/home/msterin/workspace.local/go_path/src/github.com/vmware/' + \
-           'docker-volume-vsphere/esx_service/cli/test1'
-    update_content(content=CONFIG_DB_INFO.format("MyDSSSSSSSSNAE"), tag=CONFIG_DB_TAG, file=file, add=True)
+    test_content = """
+#!/bin/bash some
+#stuff for rc.local.d/local.sh
+
+# more
+Some more code() !
+
+exit 0
+
+"""
+    # Basic test: add new content. Replace it. Remove it. Compare with original content - should be the same.
+    # Also, on neach step check some pattern in the current file
+    with open("test.tmpl", "w") as f:
+        f.write(test_content)
+    shutil.copy("./test.tmpl", "./test")
+    ds = "ShouldBeTest1"
+    update_content(content=CONFIG_DB_INFO.format(ds), tag=CONFIG_DB_TAG, file="./test", add=True)
+    with open("./test") as f:
+        if f.read().find(ds) == -1:
+            print("failed with test")
+    shutil.copy("./test", "./test1")
+    ds = "Test2"
+    update_content(content=CONFIG_DB_INFO.format(ds), tag=CONFIG_DB_TAG, file="./test1", add=True)
+    with open("./test1") as f:
+        if f.read().find(ds) == -1:
+            print("failed with test1")
+    shutil.copy("./test1", "./test2")
+    update_content(content=None, tag=CONFIG_DB_TAG, file="./test2", add=False)
+    with open("./test2") as f:
+        c = f.read()
+    if c != test_content:
+        print("test.impl and test 2 are Different !")
+    else:
+        print("all good")
+
 
 # TODO: save to backup  (see below), cp to tmp, and from tmp go to the file directly.
 # backups: keep one backup per hour, unlimited number in local.sh.backup.day.hour. We need then since the local.sh

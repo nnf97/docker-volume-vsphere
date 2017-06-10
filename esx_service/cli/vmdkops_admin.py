@@ -1187,9 +1187,9 @@ def is_local_vmfs(datastore_name):
 
 def service_reset():
     """Send a signal to the service to restart itself"""
-    (status, pid) = get_service_status()
-    if pid:
-        os.kill(int(pid), signal.SIGUSR1)
+    # (status, pid) = get_service_status()
+    # if pid:
+    #     os.kill(int(pid), signal.SIGUSR1)
     return None
 
 
