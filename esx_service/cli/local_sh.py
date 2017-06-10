@@ -97,7 +97,9 @@ def update_symlink_info(ds_name, add=True):
 
 import shutil
 
-if __name__ == "__main__":
+def unit_test_it():
+    'Basic unit test, TBD: do files in mktmp()' # TODO mkdtemp
+
     test_content = """
 #!/bin/bash some
 #stuff for rc.local.d/local.sh
@@ -134,11 +136,6 @@ exit 0
         print("all good")
 
 
-# TODO: save to backup  (see below), cp to tmp, and from tmp go to the file directly.
-# backups: keep one backup per hour, unlimited number in local.sh.backup.day.hour. We need then since the local.sh
-# is backed up by ESX and is a part of state.tgz - so it would be hard to recover if it has lots of stuff. Worth a few hours of work
-#
-# If 'day' already exists, do not touch it
-# add local_sh.update_content
-
-# TODO: test IN UNIT TESTS only
+# ==== Run it now ====
+if __name__ == "__main__":
+    unit_test_it()
