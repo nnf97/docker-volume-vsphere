@@ -116,8 +116,8 @@ exit 0
     name = "./test" # TMP mktmp
     with open(name, "w") as f:
         f.write(test_content)
-    for ds_name in ["DSTest1","DSTest2", "DSTest3"]:
-        update_content(content=CONFIG_DB_INFO.format(ds_name), tag=CONFIG_DB_TAG, file="./test", add=True)
+    for ds_name in ["DSTest1", "DSTest2", "DSTest3"]:
+        update_content(content=CONFIG_DB_INFO.format(ds_name), tag=CONFIG_DB_TAG, file=name)
         with open(name) as f:
             if f.read().find(ds_name) == -1:
                 print("failed with {}".format(ds_name))
