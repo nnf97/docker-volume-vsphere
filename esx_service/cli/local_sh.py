@@ -25,7 +25,7 @@ import sys
 
 # We expect this record at the end of the local.sh.
 # We need to insert the content before it.
-END_OF_CONTENT = "exit 0"
+END_OF_SCRIPT = "exit 0"
 
 # This is what we use to identify the our content for DB links..
 CONFIG_DB_TAG = "# -- vSphere Docker Volume Service configuration --"
@@ -76,14 +76,14 @@ def update_content(content, tag, add=True, file="/etc/rc.local.d/local.sh"):
                 sys.stdout.write(content)
             skip_to_tag = True
             continue
-        if line.startswith(END_OF_CONTENT):
+        if line.startswith(END_OF_SCRIPT):
             if add:
                 sys.stdout.write(content)
             no_more_checks = True
         sys.stdout.write(line)
     if not no_more_checks:
         # for some reason we did not find 'exit 0' nor tag, so let's dump the
-        # content just in case.
+        # requested content just in case.
         if add:
             sys.stdout.write(content)
 
@@ -92,44 +92,3 @@ def update_symlink_info(ds_name, add=True):
     """Convenience wrapper for updating symlink info only"""
     update_content(CONFIG_DB_INFO.format(ds_name), CONFIG_DB_TAG, add=add)
 
-
-# ==== test====
-
-import shutil
-
-# Basic test: add new content. Replace it. Remove it. Compare with original content - should be the same.
-# Also, on neach step check some pattern in the current file
-def unit_test_it():
-    'Basic unit test, TBD: do files in mktmp()' # TODO mkdtemp
-
-    test_content = """
-#!/bin/bash some
-#stuff for rc.local.d/local.sh
-
-# more
-Some more code() !
-
-exit 0
-
-"""
-
-    name = "./test" # TMP mktmp
-    with open(name, "w") as f:
-        f.write(test_content)
-    for ds_name in ["DSTest1", "DSTest2", "DSTest3"]:
-        update_content(content=CONFIG_DB_INFO.format(ds_name), tag=CONFIG_DB_TAG, file=name)
-        with open(name) as f:
-            if f.read().find(ds_name) == -1:
-                print("failed with {}".format(ds_name))
-    update_content(content=None, tag=CONFIG_DB_TAG, file=name, add=False)
-    with open(name) as f:
-        final_content = f.read()
-    if final_content != test_content:
-        print("Start and beginning are Different ! (\n{}\n{}\n".format(final_content, test_content))
-    else:
-        print("all good")
-
-
-# ==== Run it now ====
-if __name__ == "__main__":
-    unit_test_it()
